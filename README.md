@@ -9,3 +9,5 @@ usage: java -jar HttpsPingerApp.jar [options]
  -port <arg>       Port number of the service (default: 443)
  -url <arg>        URL under test
 ```
+
+Use case for this app is to be able to check if certificate, stored in a key store, still matches with the remote server.
