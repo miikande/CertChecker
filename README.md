@@ -1,6 +1,7 @@
 # HttpsPinger
 A small command line application to ping HTTPS urls. Works both with or without relying on client side keystore.
 
+Grab the jar file from dist folder and you're good to go:
 ```
 usage: java -jar HttpsPingerApp.jar [options]
  -help             Displays this help documentation
