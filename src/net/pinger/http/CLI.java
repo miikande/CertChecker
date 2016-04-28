@@ -117,7 +117,7 @@ public class CLI {
 
 	private static void displayHelp() {
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("HTTPS Pinging Application", options);
+		formatter.printHelp("java -jar HttpsPingerApp.jar [options]", options);
 	}
 
 	private static void createOptions(Options options) {
@@ -125,7 +125,7 @@ public class CLI {
 		options.addOption("password", true, "Keystore password");
 		options.addOption("url", true, "URL under test");
 		options.addOption("port", true, "Port number of the service (default: 443)");
-		options.addOption("help", false, "Display help documentation");
+		options.addOption("help", false, "Displays this help documentation");
 	}
 
 }
