@@ -10,6 +10,7 @@ import java.security.cert.CertificateException;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -32,18 +33,27 @@ public class SSLConnection {
 			System.setProperty("javax.net.debug", "ssl");
 	}
 	
-	/**
-	 * Will call given https url without caring about certificate.
-	 * Could be used for testing general connectivity of an URL...
-	 * @param url
-	 * @return
-	 * @throws Exception
-	 */
-    public boolean connectNoCert(String url) throws Exception {
-    	boolean ret = false;
+	
+    public boolean canConnectToAcceptSelfSigned(String url) throws Exception {
+    	return canConnectTo(url, true);
+    }
+    
+    public boolean canConnectToDoNotAcceptSelfSigned(String url) throws Exception {
+    	return canConnectTo(url, false);
+    }
+
+	private boolean canConnectTo(String url, boolean acceptSelfSigned) throws NoSuchAlgorithmException,
+			KeyStoreException, KeyManagementException, IOException,
+			ClientProtocolException {
+		
+		boolean ret = false;
     	
     	SSLContextBuilder builder = new SSLContextBuilder();
-        builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+    	
+    	if (acceptSelfSigned) {
+    		builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+    	}
+        
         SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
                 builder.build());
         CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(
@@ -61,7 +71,7 @@ public class SSLConnection {
         }
         
         return ret;
-    }
+	}
 
     /**
      * Calls given URL using provided keystore.

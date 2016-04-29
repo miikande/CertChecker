@@ -22,7 +22,7 @@ public class TestSSLConnection {
 		boolean ret = false;
 		
 		try {
-			ret = conn.connectNoCert(null);
+			ret = conn.canConnectToDoNotAcceptSelfSigned(url);
 		} catch (Exception e) {
 			System.out.println("[ERROR] " + e.getMessage());
 		}

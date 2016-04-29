@@ -15,12 +15,15 @@ public class CLI {
 	static Options options = new Options();
 
 	public static void main(String[] args) {
-		boolean errors = false;
+		boolean argumentParseErrors = false;
 		File keystoreFile = null;
 		String keystorePass = null;
 		String url = null;
 		int port = 443;
 		boolean debug = false;
+		boolean isSelfSigned = false;
+		boolean canConnect = false;
+		boolean canConnectWithKeystore = false;
 		
 		// create Options object
 		
@@ -36,13 +39,13 @@ public class CLI {
 				System.exit(0);
 			}
 			
-			// Check the args we got from user
+			// Check the arguments we got from user
 			if (cmd.hasOption("url")) {
 				url = cmd.getOptionValue("url");
 			}
 			else {
 				System.err.println("[ERROR] URL is required parameter!");
-				errors = true;
+				argumentParseErrors = true;
 			}
 			
 			if (cmd.hasOption("keystore")) {
@@ -51,7 +54,7 @@ public class CLI {
 				
 				if (!keystoreFile.canRead()) {
 					System.err.println("[ERROR] Can't access given keystore file: " + keystoreFileStr);
-					errors = true;
+					argumentParseErrors = true;
 				}
 				
 				if (cmd.hasOption("password")) {
@@ -59,7 +62,7 @@ public class CLI {
 				}
 				else {
 					System.err.println("[ERROR] Please provide a password for the keystore!");
-					errors = true;
+					argumentParseErrors = true;
 				}
 			}
 			
@@ -75,43 +78,56 @@ public class CLI {
 			
 		} catch (ParseException e) {
 			System.err.println("[ERROR] Couldn't parse given arguments: " + e.getMessage());
-			errors = true;
-			return;
+			argumentParseErrors = true;
+			//return;
 		}
 		
-		if (!errors) {
+		if (!argumentParseErrors) {
 			SSLConnection conn = new SSLConnection(debug);
-			boolean success = true;
 			
+			// First we'll test connection accepting self signed certs and then
+			// without accepting self signed certs to see which one the server has...
 			try {
-				if (keystoreFile == null) {
-					success = conn.connectNoCert(url);	
+				canConnect = conn.canConnectToAcceptSelfSigned(url);
+			} catch (Exception e) { /* NO-OP */ }
+			
+			if (canConnect) {
+				try {
+					conn.canConnectToDoNotAcceptSelfSigned(url);
 				}
-				else {
-					success = conn.connectWithCert(url, keystoreFile, keystorePass);
+				catch (Exception e) { 
+					isSelfSigned = true;
 				}
-			} 
-			catch (ValidatorException e) {
-				System.err.println("[ERROR] Can't find valid certificate for given URL!");
-				System.exit(2);
-			}
-			catch (Exception e) {
-				System.err.println("[ERROR] Got into problems while connecting to given URL: " + e.getMessage());
-				System.exit(2);
 			}
 			
-			if (!success) {
-				System.err.println("[ERROR] Couldn't connect to given URL...");
-				System.exit(2);
+			if (keystoreFile != null) {
+				try {
+					canConnectWithKeystore = conn.connectWithCert(url, keystoreFile, keystorePass);
+				}
+				catch (Exception e) { 
+					// TODO: check why!
+					canConnectWithKeystore = false;
+				}
 			}
-			else {
-				System.out.println("Connection was successfully established!");
-			}
+		}
 			
+			
+		if (!canConnect) {
+			System.err.println("[ERROR] Couldn't connect to given URL: " + url);
+			System.exit(2);
 		}
 		else {
-			System.out.println("Please solve above issues and try again!");
+			System.out.println("Connection was successfully established!");
+			System.out.println("URL: " + url);
+			
+			String certType = isSelfSigned ? "self-signed" : "CA signed";
+			System.out.println("Certificate type: " + certType);
+			
+			if (keystoreFile != null) {
+				System.out.println("Can connect using keystore: " + canConnectWithKeystore);
+			}
 		}
+		
 		
 	}
 
@@ -124,7 +140,7 @@ public class CLI {
 		options.addOption("keystore", true, "Full path to keystore file");
 		options.addOption("password", true, "Keystore password");
 		options.addOption("url", true, "URL under test");
-		options.addOption("port", true, "Port number of the service (default: 443)");
+		options.addOption("port", true, "(not implemented) Port number of the service (default: 443)");
 		options.addOption("help", false, "Displays this help documentation");
 	}
 
