@@ -1,5 +1,5 @@
-# HttpsPinger
-A small command line application to ping HTTPS urls. Works both with or without relying on client side keystore.
+# Certificate Checker
+A really simple Java app to check certificates on remote server. Comes with a command line interface.
 
 Grab the jar file from dist folder and you're good to go:
 ```
@@ -11,4 +11,9 @@ usage: java -jar HttpsPingerApp.jar [options]
  -url <arg>        URL under test
 ```
 
-Use case for this app is to be able to check if certificate, stored in a key store, still matches with the remote server.
+# Supported Use Cases
+* Checks if given URL can be accessed
+* Checks the type of certificate, used by the server
+   * Self-signed
+   * By trusted certificate authority (CA)
+* Checks if local keystore contains a certificate for given URL
