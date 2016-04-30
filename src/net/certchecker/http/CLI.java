@@ -3,6 +3,7 @@ package net.certchecker.http;
 import java.io.File;
 
 import net.certchecker.http.CertChecker.CertType;
+import net.certchecker.http.CertChecker.KeyStoreConnectionResult;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -11,20 +12,16 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import sun.security.validator.ValidatorException;
-
 public class CLI {
 	static Options options = new Options();
 
 	public static void main(String[] args) {
 		boolean argumentParseErrors = false;
-		File keystoreFile = null;
-		String keystorePass = null;
+		File keyStoreFile = null;
+		String keyStorePass = null;
 		String url = null;
-		int port = 443;
 		boolean debug = false;
 		boolean canConnect = false;
-		boolean canConnectWithKeystore = false;
 		
 		// create Options object
 		
@@ -50,28 +47,21 @@ public class CLI {
 			}
 			
 			if (cmd.hasOption("keystore")) {
-				String keystoreFileStr = cmd.getOptionValue("keystore");
-				keystoreFile = new File(keystoreFileStr);
+				String keyStoreFileStr = cmd.getOptionValue("keystore");
+				keyStoreFile = new File(keyStoreFileStr);
 				
-				if (!keystoreFile.canRead()) {
-					System.err.println("[ERROR] Can't access given keystore file: " + keystoreFileStr);
+				if (!keyStoreFile.canRead()) {
+					System.err.println("[ERROR] Can't access given key store file: " + keyStoreFileStr);
 					argumentParseErrors = true;
 				}
 				
 				if (cmd.hasOption("password")) {
-					keystorePass = cmd.getOptionValue("password");
+					keyStorePass = cmd.getOptionValue("password");
 				}
 				else {
-					System.err.println("[ERROR] Please provide a password for the keystore!");
+					System.err.println("[ERROR] Please provide a password for the key store!");
 					argumentParseErrors = true;
 				}
-			}
-			
-			if (cmd.hasOption("port")) {
-				port = Integer.parseInt(cmd.getOptionValue("port"));
-				
-				// TODO: implement support for defining used port
-				System.out.println("Sorry, port option has not been implemented yet :P");
 			}
 			
 			debug = cmd.hasOption("debug");
@@ -95,14 +85,14 @@ public class CLI {
 				System.out.println("URL: " + url);
 				
 				// Check used certificate type (CA Vs. Self-signed) 
-				CertType certType = checker.getCertificateType(url); 
+				CertType certType = checker.getCertificateType(url);
 				
 				switch (certType) {
 				case CA:
 					System.out.println("Certificate type: CA signed");
 					break;
 					
-				case SELFSIGNED:
+				case SELF_SIGNED:
 					System.out.println("Certificate type: Self-signed");
 					break;
 					
@@ -111,12 +101,34 @@ public class CLI {
 					break;
 				}
 				
-				// And finally, we'll check if we can connect the given URL
-				// by using a keystore
-				if (keystoreFile != null) {
-					canConnectWithKeystore = checker.connectUsingKeystore(url, keystoreFile, keystorePass);
-					System.out.println("Can connect using given keystore: " + 
-							String.valueOf(canConnectWithKeystore).toUpperCase());
+				// And finally, we'll check if we can connect to the given URL
+				// by using a key store
+				if (keyStoreFile != null) {
+					KeyStoreConnectionResult res = checker.checkConnectionUsingKeyStore(
+							url, keyStoreFile, keyStorePass);
+					
+					switch (res) {
+					case CERT_NOT_FOUND:
+						System.out.println("No matching certificate found from key store!");
+						break;
+
+					case INVALID_PASSWORD:
+						System.out.println("Invalid key store password!");
+						break;
+						
+					case KEY_STORE_NOT_FOUND:
+						System.out.println("Key store does not exist: " + keyStoreFile);
+						break;
+						
+					case SUCCESS:
+						System.out.println("Key store certification matches with the server!");
+						break;
+						
+					default:
+						System.out.println("Unknown result while trying to connect the "
+								+ "server using given key store!");
+						break;
+					}
 				}
 			}
 			else {
@@ -129,16 +141,15 @@ public class CLI {
 
 	private static void displayHelp() {
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("java -jar HttpsPingerApp.jar [options]", options);
+		formatter.printHelp("java -jar CertChecker.jar [options]", options);
 	}
 
 	private static void createOptions(Options options) {
-		options.addOption("keystore", true, "Full path to keystore file");
-		options.addOption("password", true, "Keystore password");
+		options.addOption("key store", true, "Full path to key store file");
+		options.addOption("password", true, "Key store password");
 		options.addOption("url", true, "URL under test");
-		options.addOption("port", true, "(not implemented) Port number of the service (default: 443)");
 		options.addOption("help", false, "Displays this help documentation");
-		options.addOption("debug", false, "Display javax.net.debug SSL debug messages");
+		options.addOption("debug", false, "Show javax.net.debug SSL debug messages");
 	}
 
 }

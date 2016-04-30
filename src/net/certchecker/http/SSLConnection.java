@@ -74,11 +74,11 @@ public class SSLConnection {
 	}
 
     /**
-     * Calls given URL using provided keystore.
+     * Calls given URL using provided key store.
      * 
      * @param url String format of the URL to access
-     * @param keystore File path to keystore
-     * @param keystorePass String password of the keystore
+     * @param key store File path to key store
+     * @param key storePass String password of the key store
      * 
      * @return true in case of connection has been established, false otherwise
      * 
@@ -88,14 +88,14 @@ public class SSLConnection {
      * @throws CertificateException
      * @throws IOException
      */
-	public boolean connectWithCert(String url, File keystore, String keystorePass) 
+	public boolean connectWithCert(String url, File keyStore, String keyStorePass) 
 			throws KeyManagementException, NoSuchAlgorithmException, 
 			KeyStoreException, CertificateException, IOException {
 		
     	boolean ret = false;
     	
         SSLContext sslcontext = SSLContexts.custom()
-                .loadTrustMaterial(keystore, keystorePass.toCharArray())
+                .loadTrustMaterial(keyStore, keyStorePass.toCharArray())
                 .build();
         
         // Allow TLSv1 protocol only

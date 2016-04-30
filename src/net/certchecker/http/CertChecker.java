@@ -12,7 +12,14 @@ public class CertChecker {
 	private SSLConnection conn;
 	
 	public static enum CertType {
-		CA, SELFSIGNED, UNKNOWN
+		CA, SELF_SIGNED, UNKNOWN
+	}
+	
+	public static enum KeyStoreConnectionResult {
+		KEY_STORE_NOT_FOUND,
+		INVALID_PASSWORD,
+		CERT_NOT_FOUND,
+		SUCCESS
 	}
 	
 	public CertChecker(boolean debug) {
@@ -45,7 +52,7 @@ public class CertChecker {
 		// Then self-signed
 		try {
 			if (conn.canConnectToAcceptSelfSigned(url)) {
-				return CertType.SELFSIGNED;
+				return CertType.SELF_SIGNED;
 			}
 		} catch (Exception e) { /* NO-OP */ }
 
@@ -54,13 +61,11 @@ public class CertChecker {
 		return CertType.UNKNOWN;
 	}
 
-	public boolean connectUsingKeystore(String url, File keystoreFile,
-			String keystorePass) {
-		
-		boolean ret = false;
+	public KeyStoreConnectionResult checkConnectionUsingKeyStore(String url, File keyStoreFile,
+			String keyStorePass) {
 		
 		try {
-			ret = conn.connectWithCert(url, keystoreFile, keystorePass);
+			conn.connectWithCert(url, keyStoreFile, keyStorePass);
 		} catch (KeyManagementException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -74,11 +79,16 @@ public class CertChecker {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (e.getMessage().contains("password"))
+				return KeyStoreConnectionResult.INVALID_PASSWORD;
+			
+			if (e.getMessage().contains("unable to find valid certification"))
+				return KeyStoreConnectionResult.CERT_NOT_FOUND;
+				
+			return KeyStoreConnectionResult.KEY_STORE_NOT_FOUND;
 		}
 		
-		return ret;
+		return KeyStoreConnectionResult.SUCCESS;
 	}
 
 }
