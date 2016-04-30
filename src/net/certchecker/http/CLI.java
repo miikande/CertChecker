@@ -145,7 +145,7 @@ public class CLI {
 	}
 
 	private static void createOptions(Options options) {
-		options.addOption("key store", true, "Full path to key store file");
+		options.addOption("keystore", true, "Full path to key store file");
 		options.addOption("password", true, "Key store password");
 		options.addOption("url", true, "URL under test");
 		options.addOption("help", false, "Displays this help documentation");
