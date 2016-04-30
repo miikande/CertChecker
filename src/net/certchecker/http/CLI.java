@@ -23,8 +23,6 @@ public class CLI {
 		String url = null;
 		int port = 443;
 		boolean debug = false;
-		boolean isSelfSigned = false;
-		boolean isCASigned = false;
 		boolean canConnect = false;
 		boolean canConnectWithKeystore = false;
 		
@@ -73,11 +71,10 @@ public class CLI {
 				port = Integer.parseInt(cmd.getOptionValue("port"));
 				
 				// TODO: implement support for defining used port
-				System.out.println("SORRRYYY, not implemented yet :P");
+				System.out.println("Sorry, port option has not been implemented yet :P");
 			}
 			
-			if (cmd.hasOption("debug"))
-				debug = cmd.getOptionValue("debug").equalsIgnoreCase("true") ? true : false;
+			debug = cmd.hasOption("debug");
 			
 		} catch (ParseException e) {
 			System.err.println("[ERROR] Couldn't parse given arguments: " + e.getMessage());
@@ -89,7 +86,7 @@ public class CLI {
 		// do some networking...
 		
 		if (!argumentParseErrors) {
-			CertChecker checker = new CertChecker();
+			CertChecker checker = new CertChecker(debug);
 			
 			// Start by ensuring the given URL responds to us
 			canConnect = checker.canConnect(url);
@@ -141,6 +138,7 @@ public class CLI {
 		options.addOption("url", true, "URL under test");
 		options.addOption("port", true, "(not implemented) Port number of the service (default: 443)");
 		options.addOption("help", false, "Displays this help documentation");
+		options.addOption("debug", false, "Display javax.net.debug SSL debug messages");
 	}
 
 }
