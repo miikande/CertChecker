@@ -1,4 +1,4 @@
-package net.pinger.http;
+package net.certchecker.http;
 
 import java.io.File;
 import java.io.IOException;

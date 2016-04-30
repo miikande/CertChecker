@@ -3,7 +3,7 @@ A really simple Java app to check certificates on remote server. Comes with a co
 
 Grab the jar file from dist folder and you're good to go:
 ```
-usage: java -jar HttpsPingerApp.jar [options]
+usage: java -jar CertChecker.jar [options]
  -help             Displays this help documentation
  -keystore <arg>   Full path to keystore file
  -password <arg>   Keystore password

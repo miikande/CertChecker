@@ -1,6 +1,8 @@
-package net.pinger.http;
+package net.certchecker.http;
 
 import java.io.File;
+
+import net.certchecker.http.CertChecker.CertType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -22,6 +24,7 @@ public class CLI {
 		int port = 443;
 		boolean debug = false;
 		boolean isSelfSigned = false;
+		boolean isCASigned = false;
 		boolean canConnect = false;
 		boolean canConnectWithKeystore = false;
 		
@@ -82,52 +85,48 @@ public class CLI {
 			//return;
 		}
 		
-		if (!argumentParseErrors) {
-			SSLConnection conn = new SSLConnection(debug);
-			
-			// First we'll test connection accepting self signed certs and then
-			// without accepting self signed certs to see which one the server has...
-			try {
-				canConnect = conn.canConnectToAcceptSelfSigned(url);
-			} catch (Exception e) { /* NO-OP */ }
-			
-			if (canConnect) {
-				try {
-					conn.canConnectToDoNotAcceptSelfSigned(url);
-				}
-				catch (Exception e) { 
-					isSelfSigned = true;
-				}
-			}
-			
-			if (keystoreFile != null) {
-				try {
-					canConnectWithKeystore = conn.connectWithCert(url, keystoreFile, keystorePass);
-				}
-				catch (Exception e) { 
-					// TODO: check why!
-					canConnectWithKeystore = false;
-				}
-			}
-		}
-			
-			
-		if (!canConnect) {
-			System.err.println("[ERROR] Couldn't connect to given URL: " + url);
-			System.exit(2);
-		}
-		else {
-			System.out.println("Connection was successfully established!");
-			System.out.println("URL: " + url);
-			
-			String certType = isSelfSigned ? "self-signed" : "CA signed";
-			System.out.println("Certificate type: " + certType);
-			
-			if (keystoreFile != null) {
-				System.out.println("Can connect using keystore: " + canConnectWithKeystore);
-			}
-		}
+		// Now that we have parsed command line arguments, it's time to
+		// do some networking...
 		
+		if (!argumentParseErrors) {
+			CertChecker checker = new CertChecker();
+			
+			// Start by ensuring the given URL responds to us
+			canConnect = checker.canConnect(url);
+			if (canConnect) {
+				System.out.println("Connection was successfully established!");
+				System.out.println("URL: " + url);
+				
+				// Check used certificate type (CA Vs. Self-signed) 
+				CertType certType = checker.getCertificateType(url); 
+				
+				switch (certType) {
+				case CA:
+					System.out.println("Certificate type: CA signed");
+					break;
+					
+				case SELFSIGNED:
+					System.out.println("Certificate type: Self-signed");
+					break;
+					
+				default:
+					System.out.println("Certificate type: UNKNOWN");
+					break;
+				}
+				
+				// And finally, we'll check if we can connect the given URL
+				// by using a keystore
+				if (keystoreFile != null) {
+					canConnectWithKeystore = checker.connectUsingKeystore(url, keystoreFile, keystorePass);
+					System.out.println("Can connect using given keystore: " + 
+							String.valueOf(canConnectWithKeystore).toUpperCase());
+				}
+			}
+			else {
+				System.err.println("[ERROR] Can't connect to given URL: " + url);
+				System.exit(2);
+			}
+		}
 		
 	}
 

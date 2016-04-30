@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 
-import net.pinger.http.SSLConnection;
+import net.certchecker.http.SSLConnection;
 
 import org.junit.Test;
 
