@@ -1,9 +1,9 @@
 # Certificate Checker
-A really simple Java app to check certificates on remote server. Comes with an easy-to-use command line interface. 
+A small Java utility app to check certificates on remote server. Comes with a simple command line interface. In case you plan to use this as an embedded lib, check [CertChecker.java test cases](https://github.com/miikande/CertChecker/blob/master/src/net/pinger/tests/TestCertChecker.java) for some ideas.
 
 Built using wonderful [Apache HttpClient 4.5](https://hc.apache.org/httpcomponents-client-ga/) and [Apache Commons CLI 1.3.1](https://commons.apache.org/proper/commons-cli/) libraries.
 
-I would highly appreciate if you would let me know if you found this project useful in any way, thanks! :)
+Any feedback is welcome and highly appreciated, thanks! :)
 
 ## How To
 Grab the jar file from dist folder and you're good to go:
